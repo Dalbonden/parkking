@@ -95,6 +95,21 @@ export async function getListings(filters: ListingFilters = {}): Promise<Listing
   return (data as unknown as ListingRow[]).map(rowToListing);
 }
 
+/** All listings owned by a host, any status (for the host dashboard). */
+export async function getListingsForHost(hostId: string): Promise<Listing[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select(SELECT)
+    .eq("host_id", hostId)
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as unknown as ListingRow[]).map(rowToListing);
+}
+
 export async function getListing(id: string): Promise<Listing | null> {
   if (!isSupabaseConfigured) return MOCK_LISTINGS.find((l) => l.id === id) ?? null;
 

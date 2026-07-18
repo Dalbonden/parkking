@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Category } from "@/lib/types";
 
@@ -60,7 +62,9 @@ export async function createListing(
       if (error) {
         return { status: "error", message: `Kunde inte spara: ${error.message}` };
       }
-      return { status: "success", message: "Tack! Din plats har skickats in för granskning." };
+      // Saved — send the host to their dashboard to see the new listing.
+      revalidatePath("/dashboard");
+      redirect("/dashboard");
     }
   }
 

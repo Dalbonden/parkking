@@ -1,4 +1,5 @@
-import { categoryMeta, type Listing } from "@/lib/types";
+import { CategoryIcon } from "@/components/icons";
+import type { Listing } from "@/lib/types";
 
 /**
  * Lightweight schematic map. Plots listing pins by lat/lng without any external
@@ -40,8 +41,8 @@ export function MapPlaceholder({ listings }: { listings: Listing[] }) {
           style={pos(l.lat, l.lng)}
           title={`${l.title} — ${l.area}`}
         >
-          <span className="grid size-8 place-items-center rounded-full border-2 border-card bg-primary text-sm shadow-md">
-            {categoryMeta(l.category).emoji}
+          <span className="grid size-8 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md">
+            <CategoryIcon category={l.category} className="size-4" />
           </span>
         </div>
       ))}

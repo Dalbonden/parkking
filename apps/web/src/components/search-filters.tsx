@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { CategoryIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/types";
 
@@ -46,13 +47,13 @@ export function SearchFilters() {
             type="button"
             onClick={() => setParam("category", c.key)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-sm transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
               category === c.key
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border hover:bg-accent",
             )}
           >
-            {c.emoji} {c.label}
+            <CategoryIcon category={c.key} className="size-4" /> {c.label}
           </button>
         ))}
       </div>

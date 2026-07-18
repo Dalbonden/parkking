@@ -6,16 +6,15 @@ export interface CategoryMeta {
   label: string;
   /** English gloss for non-Swedish readers */
   gloss: string;
-  emoji: string;
   /** e.g. "kr / månad" vs "kr / dygn" hint */
   unitHint: string;
 }
 
 export const CATEGORIES: CategoryMeta[] = [
-  { key: "parking", label: "Parkering", gloss: "Parking", emoji: "🅿️", unitHint: "plats" },
-  { key: "garage", label: "Garage", gloss: "Garage", emoji: "🚗", unitHint: "garage" },
-  { key: "storage", label: "Förråd", gloss: "Storage", emoji: "📦", unitHint: "förråd" },
-  { key: "boat", label: "Båtplats", gloss: "Boat berth", emoji: "⛵", unitHint: "båtplats" },
+  { key: "parking", label: "Parkering", gloss: "Parking", unitHint: "plats" },
+  { key: "garage", label: "Garage", gloss: "Garage", unitHint: "garage" },
+  { key: "storage", label: "Förråd", gloss: "Storage", unitHint: "förråd" },
+  { key: "boat", label: "Båtplats", gloss: "Boat berth", unitHint: "båtplats" },
 ];
 
 export function categoryMeta(key: Category): CategoryMeta {

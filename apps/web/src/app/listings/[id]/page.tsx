@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPlaceholder } from "@/components/map-placeholder";
+import { CategoryIcon, ShieldCheckIcon, ShieldIcon, StarIcon } from "@/components/icons";
 import { getListing } from "@/lib/listings";
 import { formatSek } from "@/lib/format";
 import { categoryMeta } from "@/lib/types";
@@ -50,16 +51,19 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             className="flex h-64 items-center justify-center rounded-xl"
             style={{ backgroundColor: listing.swatch }}
           >
-            <span className="text-7xl" aria-hidden>
-              {cat.emoji}
-            </span>
+            <CategoryIcon category={listing.category} className="size-24 text-white/90" strokeWidth={1.2} />
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <Badge variant="primary">{cat.label}</Badge>
-            {listing.consentVerified && <Badge variant="accent">✓ Verifierad rätt att hyra ut</Badge>}
-            <span className="text-sm text-muted-foreground">
-              ★ {listing.rating.toFixed(1)} · {listing.reviewCount} omdömen
+            {listing.consentVerified && (
+              <Badge variant="accent">
+                <ShieldCheckIcon className="size-3.5" /> Verifierad rätt att hyra ut
+              </Badge>
+            )}
+            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <StarIcon className="size-3.5 text-amber-500" /> {listing.rating.toFixed(1)} ·{" "}
+              {listing.reviewCount} omdömen
             </span>
           </div>
 
@@ -138,7 +142,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           </Card>
 
           <div className="mt-4 rounded-xl border border-border bg-accent/40 p-4 text-sm">
-            <div className="font-medium">🛡️ Trygg bokning</div>
+            <div className="flex items-center gap-1.5 font-medium">
+              <ShieldIcon className="size-4 text-primary" /> Trygg bokning
+            </div>
             <ul className="mt-2 space-y-1 text-muted-foreground">
               <li>BankID-verifierade parter</li>
               <li>Betalning via escrow</li>

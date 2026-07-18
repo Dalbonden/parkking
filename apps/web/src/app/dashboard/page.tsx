@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getListings } from "@/lib/listings";
+import { getCurrentUser } from "@/lib/auth";
+import { getListingsForHost } from "@/lib/listings";
 import { formatSek } from "@/lib/format";
-import { categoryMeta } from "@/lib/types";
+import { CategoryIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Min sida",
@@ -13,15 +13,30 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  // Demo: treat the first few listings as "yours".
-  const myListings = (await getListings()).slice(0, 3);
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold tracking-tight">Min sida</h1>
+        <p className="mt-2 text-muted-foreground">
+          Logga in för att se dina platser, bokningar och utbetalningar.
+        </p>
+        <Button className="mt-6" asChild>
+          <Link href="/sign-in">Logga in</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const myListings = await getListingsForHost(user.id);
   const monthly = myListings.reduce((sum, l) => sum + l.pricePerMonth, 0);
 
   const stats = [
-    { label: "Aktiva platser", value: String(myListings.length) },
-    { label: "Intäkt / månad", value: formatSek(monthly) },
-    { label: "Beläggning", value: "78%" },
-    { label: "Snittbetyg", value: "4,8 ★" },
+    { label: "Mina platser", value: String(myListings.length) },
+    { label: "Potentiell intäkt / mån", value: formatSek(monthly) },
+    { label: "Verifierad", value: "BankID" },
+    { label: "Konto", value: user.email?.split("@")[0] ?? "–" },
   ];
 
   return (
@@ -29,7 +44,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Min sida</h1>
-          <p className="text-muted-foreground">Demoöversikt för uthyrare</p>
+          <p className="text-muted-foreground">Inloggad som {user.email}</p>
         </div>
         <Button asChild>
           <Link href="/list-space">+ Lägg upp ny plats</Link>
@@ -41,50 +56,53 @@ export default async function DashboardPage() {
           <Card key={s.label}>
             <CardContent className="pt-5">
               <div className="text-sm text-muted-foreground">{s.label}</div>
-              <div className="mt-1 text-2xl font-bold">{s.value}</div>
+              <div className="mt-1 truncate text-2xl font-bold">{s.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <h2 className="mt-10 text-lg font-semibold">Dina platser</h2>
-      <div className="mt-4 space-y-3">
-        {myListings.map((l) => (
-          <div
-            key={l.id}
-            className="flex items-center gap-4 rounded-xl border border-border bg-card p-4"
-          >
-            <span
-              className="grid size-12 shrink-0 place-items-center rounded-lg text-2xl"
-              style={{ backgroundColor: l.swatch }}
+      {myListings.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          Du har inga platser ännu.{" "}
+          <Link href="/list-space" className="text-primary hover:underline">
+            Lägg upp din första plats
+          </Link>
+          .
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {myListings.map((l) => (
+            <div
+              key={l.id}
+              className="flex items-center gap-4 rounded-xl border border-border bg-card p-4"
             >
-              {categoryMeta(l.category).emoji}
-            </span>
-            <div className="min-w-0 flex-1">
-              <Link href={`/listings/${l.id}`} className="font-medium hover:text-primary">
-                {l.title}
-              </Link>
-              <div className="text-sm text-muted-foreground">
-                {l.area}, {l.city}
+              <span
+                className="grid size-12 shrink-0 place-items-center rounded-lg text-white/90"
+                style={{ backgroundColor: l.swatch }}
+              >
+                <CategoryIcon category={l.category} className="size-6" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <Link href={`/listings/${l.id}`} className="font-medium hover:text-primary">
+                  {l.title}
+                </Link>
+                <div className="text-sm text-muted-foreground">
+                  {l.area}, {l.city}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold">{formatSek(l.pricePerMonth)}</div>
+                <div className="text-xs text-muted-foreground">/ månad</div>
               </div>
             </div>
-            <div className="hidden sm:block">
-              {l.consentVerified ? (
-                <Badge variant="accent">✓ Samtycke</Badge>
-              ) : (
-                <Badge variant="outline">Samtycke saknas</Badge>
-              )}
-            </div>
-            <div className="text-right">
-              <div className="font-semibold">{formatSek(l.pricePerMonth)}</div>
-              <div className="text-xs text-muted-foreground">/ månad</div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <p className="mt-8 rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-        Detta är en demoöversikt. Riktiga bokningar, utbetalningar (Stripe Connect) och
+        Nya platser läggs upp som “under granskning”. Bokningar, utbetalningar (Stripe Connect) och
         DAC7-rapportering kopplas in enligt docs/07.
       </p>
     </div>

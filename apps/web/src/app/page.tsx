@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ListingCard } from "@/components/listing-card";
+import {
+  CategoryIcon,
+  CreditCardIcon,
+  LockIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  ShieldIcon,
+  StarIcon,
+} from "@/components/icons";
 import { getFeaturedListings } from "@/lib/listings";
 import { CATEGORIES } from "@/lib/types";
 
 const TRUST = [
-  { icon: "🔐", label: "BankID-verifiering" },
-  { icon: "💳", label: "Trygg betalning & escrow" },
-  { icon: "⭐", label: "Omdömen åt båda håll" },
-  { icon: "🛡️", label: "Skydd mot skador" },
-  { icon: "✅", label: "Verifierad rätt att hyra ut" },
+  { Icon: LockIcon, label: "BankID-verifiering" },
+  { Icon: CreditCardIcon, label: "Trygg betalning & escrow" },
+  { Icon: StarIcon, label: "Omdömen åt båda håll" },
+  { Icon: ShieldIcon, label: "Skydd mot skador" },
+  { Icon: ShieldCheckIcon, label: "Verifierad rätt att hyra ut" },
 ];
 
 const STEPS = [
@@ -37,8 +46,8 @@ export default async function HomePage() {
     <div>
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-4 pb-10 pt-14 text-center sm:pt-20">
-        <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-          🇸🇪 Nordisk marknadsplats för förhyrda platser
+        <div className="mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
+          <MapPinIcon className="size-3.5 text-primary" /> Nordisk marknadsplats för förhyrda platser
         </div>
         <h1 className="mx-auto max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
           Hyr ut platsen du <span className="text-primary">redan betalar för</span>
@@ -59,7 +68,7 @@ export default async function HomePage() {
         <div className="mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
           {TRUST.map((t) => (
             <span key={t.label} className="inline-flex items-center gap-1.5">
-              <span aria-hidden>{t.icon}</span>
+              <t.Icon className="size-4 text-primary" />
               {t.label}
             </span>
           ))}
@@ -75,7 +84,7 @@ export default async function HomePage() {
               href={`/listings?category=${c.key}`}
               className="group rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="text-3xl">{c.emoji}</div>
+              <CategoryIcon category={c.key} className="size-8 text-primary" />
               <div className="mt-3 font-semibold group-hover:text-primary">{c.label}</div>
               <div className="text-sm text-muted-foreground">{c.gloss}</div>
             </Link>

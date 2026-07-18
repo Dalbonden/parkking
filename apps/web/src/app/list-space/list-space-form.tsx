@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ShieldCheckIcon } from "@/components/icons";
 import { CATEGORIES } from "@/lib/types";
 import { createListing, type CreateListingState } from "./actions";
 
@@ -22,7 +23,7 @@ export function ListSpaceForm() {
   if (state.status === "success") {
     return (
       <div className="rounded-xl border border-border bg-accent/40 p-6 text-center">
-        <div className="text-3xl">✅</div>
+        <ShieldCheckIcon className="mx-auto size-9 text-primary" />
         <h2 className="mt-2 text-lg font-semibold">Inskickat!</h2>
         <p className="mt-1 text-sm text-muted-foreground">{state.message}</p>
       </div>
@@ -36,7 +37,7 @@ export function ListSpaceForm() {
         <Select id="category" name="category" defaultValue="parking">
           {CATEGORIES.map((c) => (
             <option key={c.key} value={c.key}>
-              {c.emoji} {c.label}
+              {c.label}
             </option>
           ))}
         </Select>
