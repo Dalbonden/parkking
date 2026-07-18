@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platsdela — hyr ut din förhyrda plats</title>
+  <meta name="description" content="Platsdela — marknadsplatsen där du hyr ut parkeringsplatser, garage, förråd och båtplatser du redan betalar för men inte använder fullt ut." />
+  <style>
+    :root {
+      --bg: #f7f8fa; --surface: #ffffff; --text: #10151c; --muted: #5b6672;
+      --brand: #1f7a5c; --brand-strong: #0f5f47;
+      --border: #e6e9ee; --accent: #eaf5f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117; --surface: #161b22; --text: #e8edf3; --muted: #9aa6b2;
+        --brand: #3fbb8f; --brand-strong: #6fd3ae; --border: #232a33; --accent: #12241d;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+    header { padding: 20px 0; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; }
+    .logo span { color: var(--brand); }
+    .tag { font-size: 0.8rem; color: var(--muted); }
+    .hero { padding: 56px 0 40px; text-align: center; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 16px; }
+    .hero h1 span { color: var(--brand); }
+    .hero p.lead { font-size: 1.2rem; color: var(--muted); max-width: 640px; margin: 0 auto 32px; }
+    .cta { display: flex; gap: 10px; max-width: 460px; margin: 0 auto; flex-wrap: wrap; }
+    .cta input { flex: 1 1 220px; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-size: 1rem; }
+    .cta button { padding: 14px 22px; border-radius: 10px; border: none; background: var(--brand); color: #fff;
+      font-size: 1rem; font-weight: 600; cursor: pointer; flex: 0 0 auto; }
+    .cta button:hover { background: var(--brand-strong); }
+    .note { font-size: 0.8rem; color: var(--muted); margin-top: 12px; }
+    .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 460px; margin: 18px auto 0; }
+    .roles label { font-size: 0.9rem; padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--surface); cursor: pointer; text-align: center; }
+    .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 48px 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+    .card .ico { font-size: 1.6rem; }
+    .card h3 { margin: 10px 0 4px; font-size: 1.05rem; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .how { margin: 48px 0; }
+    .how h2 { text-align: center; letter-spacing: -0.02em; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 24px; }
+    .step .n { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center;
+      border-radius: 50%; background: var(--accent); color: var(--brand); font-weight: 700; }
+    .trust { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px;
+      margin: 48px 0; display: flex; flex-wrap: wrap; gap: 16px 28px; justify-content: center; }
+    .trust span { font-size: 0.92rem; color: var(--muted); }
+    .trust b { color: var(--text); }
+    footer { border-top: 1px solid var(--border); padding: 28px 0; color: var(--muted); font-size: 0.82rem;
+      text-align: center; margin-top: 40px; }
+    .en { color: var(--muted); font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">Plats<span>dela</span></div>
+      <div class="tag">Förhyrda platser · marknadsplats</div>
+    </header>
+
+    <section class="hero">
+      <h1>Hyr ut platsen du <span>redan betalar för</span></h1>
+      <p class="lead">
+        Parkeringsplatser, garage, förråd och båtplatser står oanvända — fastän någon betalar för dem varje månad.
+        Platsdela gör din lediga plats till en inkomst, tryggt och enkelt.
+      </p>
+
+      <form class="cta" onsubmit="return handleSignup(event)">
+        <input type="email" id="email" placeholder="din@epost.se" required aria-label="E-postadress" />
+        <button type="submit">Gå med i väntelistan</button>
+      </form>
+      <div class="roles">
+        <label><input type="radio" name="role" value="host" checked /> Jag vill hyra ut</label>
+        <label><input type="radio" name="role" value="renter" /> Jag söker en plats</label>
+      </div>
+      <p class="note" id="formNote">
+        Vi hör av oss när vi öppnar i ditt område. Ingen spam.
+        <span class="en">· We'll email you when we launch in your area.</span>
+      </p>
+    </section>
+
+    <section class="cats">
+      <div class="card"><div class="ico">🅿️</div><h3>Parkering</h3><p>Gatuplats, tomt eller p-hus du hyr men inte alltid använder.</p></div>
+      <div class="card"><div class="ico">🚗</div><h3>Garage</h3><p>Ett garage eller carport som står tomt delar av tiden.</p></div>
+      <div class="card"><div class="ico">📦</div><h3>Förråd</h3><p>Extra förrådsutrymme som kan bli passiv inkomst.</p></div>
+      <div class="card"><div class="ico">⛵</div><h3>Båtplats</h3><p>En båtplats du inte nyttjar hela säsongen.</p></div>
+    </section>
+
+    <section class="how">
+      <h2>Så funkar det</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Lägg upp din plats</h3><p>Legitimera dig med BankID och intyga att du får hyra ut den.</p></div>
+        <div class="step"><div class="n">2</div><h3>Få en förfrågan</h3><p>Sätt pris och tillgänglighet. Godkänn hyresgäster du litar på.</p></div>
+        <div class="step"><div class="n">3</div><h3>Få betalt tryggt</h3><p>Betalning hålls säkert och betalas ut automatiskt. Vi sköter det jobbiga.</p></div>
+      </div>
+    </section>
+
+    <section class="trust">
+      <span>🔐 <b>BankID</b>-verifiering</span>
+      <span>💳 Trygg betalning &amp; <b>escrow</b></span>
+      <span>⭐ Omdömen åt båda håll</span>
+      <span>🛡️ <b>Skydd</b> mot skador</span>
+      <span>✅ Verifierad rätt att hyra ut</span>
+    </section>
+
+    <footer>
+      <p>Platsdela är på konceptstadiet — detta är en tidig intresseanmälan (arbetsnamn).<br />
+      <span class="en">Concept-stage waitlist. Not yet a live service. See the project docs for the full plan.</span></p>
+    </footer>
+  </div>
+
+  <script>
+    // Phase-0 demo only: stores signups locally. Swap for a real backend
+    // (Supabase table / form service) when wiring up the MVP.
+    function handleSignup(e) {
+      e.preventDefault();
+      var email = document.getElementById('email').value.trim();
+      var role = document.querySelector('input[name="role"]:checked').value;
+      if (!email) return false;
+      try {
+        var list = JSON.parse(localStorage.getItem('platsdela_waitlist') || '[]');
+        list.push({ email: email, role: role, at: new Date().toISOString() });
+        localStorage.setItem('platsdela_waitlist', JSON.stringify(list));
+      } catch (_) {}
+      document.getElementById('formNote').innerHTML =
+        'Tack! Du står nu på väntelistan som <b>' +
+        (role === 'host' ? 'uthyrare' : 'platssökande') +
+        '</b>. <span class="en">You are on the list.</span>';
+      e.target.reset();
+      return false;
+    }
+  </script>
+</body>
+</html>
