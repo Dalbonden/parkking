@@ -2,13 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPlaceholder } from "@/components/map-placeholder";
+import { BookingWidget } from "@/components/booking-widget";
 import { CategoryIcon, ShieldCheckIcon, ShieldIcon, StarIcon } from "@/components/icons";
 import { getListing } from "@/lib/listings";
 import { formatSek } from "@/lib/format";
 import { categoryMeta } from "@/lib/types";
+import { createBooking } from "./booking-actions";
 
 // In Next.js 16, params is a Promise and must be awaited.
 type Params = Promise<{ id: string }>;
@@ -20,16 +21,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: listing.title, description: listing.description };
 }
 
-const RENTER_FEE_RATE = 0.08; // illustrative renter service fee — see docs/01
-
 export default async function ListingDetailPage({ params }: { params: Params }) {
   const { id } = await params;
   const listing = await getListing(id);
   if (!listing) notFound();
 
   const cat = categoryMeta(listing.category);
-  const serviceFee = Math.round(listing.pricePerMonth * RENTER_FEE_RATE);
-  const total = listing.pricePerMonth + serviceFee;
 
   const features = [
     listing.covered ? "Inomhus / skyddad" : "Utomhus",
@@ -116,28 +113,11 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                 <span className="text-2xl font-bold">{formatSek(listing.pricePerMonth)}</span>
                 <span className="text-muted-foreground">/ månad</span>
               </div>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Hyra</span>
-                  <span>{formatSek(listing.pricePerMonth)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Serviceavgift</span>
-                  <span>{formatSek(serviceFee)}</span>
-                </div>
-                <div className="flex justify-between border-t border-border pt-2 font-semibold">
-                  <span>Totalt / månad</span>
-                  <span>{formatSek(total)}</span>
-                </div>
-              </div>
-
-              <Button className="mt-5 w-full" size="lg" asChild>
-                <Link href="/sign-in">Boka plats</Link>
-              </Button>
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Du debiteras inte än. Betalningen hålls säkert tills bokningen startar.
-              </p>
+              <BookingWidget
+                listingId={listing.id}
+                pricePerMonth={listing.pricePerMonth}
+                action={createBooking}
+              />
             </CardContent>
           </Card>
 

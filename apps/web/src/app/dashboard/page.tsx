@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth";
 import { getListingsForHost } from "@/lib/listings";
-import { formatSek } from "@/lib/format";
+import { getBookingsForHost } from "@/lib/bookings";
+import { formatSek, formatShortDate } from "@/lib/format";
 import { CategoryIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
@@ -29,14 +31,20 @@ export default async function DashboardPage() {
     );
   }
 
-  const myListings = await getListingsForHost(user.id);
+  const [myListings, incoming] = await Promise.all([
+    getListingsForHost(user.id),
+    getBookingsForHost(user.id),
+  ]);
   const monthly = myListings.reduce((sum, l) => sum + l.pricePerMonth, 0);
+  const earned = incoming
+    .filter((b) => b.paymentStatus === "paid")
+    .reduce((sum, b) => sum + (b.amountTotal - b.serviceFee), 0);
 
   const stats = [
     { label: "Mina platser", value: String(myListings.length) },
+    { label: "Bokningar", value: String(incoming.length) },
+    { label: "Intjänat (utbetalning)", value: formatSek(earned) },
     { label: "Potentiell intäkt / mån", value: formatSek(monthly) },
-    { label: "Verifierad", value: "BankID" },
-    { label: "Konto", value: user.email?.split("@")[0] ?? "–" },
   ];
 
   return (
@@ -101,10 +109,44 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <p className="mt-8 rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-        Nya platser läggs upp som “under granskning”. Bokningar, utbetalningar (Stripe Connect) och
-        DAC7-rapportering kopplas in enligt docs/07.
-      </p>
+      <h2 className="mt-10 text-lg font-semibold">Inkommande bokningar</h2>
+      {incoming.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          Inga bokningar ännu.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {incoming.map((b) => (
+            <div
+              key={b.id}
+              className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-border bg-card p-4"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">{b.listing?.title ?? "Plats"}</div>
+                <div className="text-sm text-muted-foreground">
+                  {formatShortDate(b.startDate)}–{formatShortDate(b.endDate)}
+                </div>
+              </div>
+              {b.paymentStatus === "paid" ? (
+                <Badge variant="accent">Betald</Badge>
+              ) : (
+                <Badge variant="outline">Väntar</Badge>
+              )}
+              <div className="text-right">
+                <div className="font-semibold">{formatSek(b.amountTotal - b.serviceFee)}</div>
+                <div className="text-xs text-muted-foreground">din utbetalning</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-8 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">Utbetalningar via Stripe Connect.</span> I
+        demoläget bekräftas bokningar direkt. Lägg till Stripe-nycklar (se{" "}
+        <code>.env.example</code>) för riktig kortbetalning i testläge, escrow och utbetalning till
+        värdens konto. DAC7-rapportering kopplas in enligt docs/07.
+      </div>
     </div>
   );
 }

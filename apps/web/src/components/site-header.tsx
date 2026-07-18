@@ -22,6 +22,11 @@ export async function SiteHeader() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/listings">Hitta plats</Link>
           </Button>
+          {user && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/bookings">Bokningar</Link>
+            </Button>
+          )}
           <Button variant="ghost" size="sm" asChild>
             <Link href="/dashboard">Min sida</Link>
           </Button>
