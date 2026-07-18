@@ -43,7 +43,9 @@ create table if not exists public.listings (
   access_247       boolean not null default false,
   consent_verified boolean not null default false,  -- right-to-sublet verified (docs/02)
   status           listing_status not null default 'pending_review',
-  location         geography(Point, 4326),          -- lng/lat
+  lat              double precision,                -- denormalized for easy client reads
+  lng              double precision,
+  location         geography(Point, 4326),          -- lng/lat (for PostGIS geo-search)
   rating           numeric(2,1) not null default 0,
   review_count     integer not null default 0,
   created_at       timestamptz not null default now()
@@ -151,3 +153,12 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- It's a trigger-only function; don't expose it via PostgREST RPC.
+revoke execute on function public.handle_new_user() from anon, authenticated;
+
+-- Known advisories accepted for the MVP (PostGIS-inherent, no user data exposed):
+--   * public.spatial_ref_sys lacks RLS, and postgis lives in the public schema.
+--     Remediation for production: install postgis in a dedicated `extensions`
+--     schema. See https://supabase.com/docs/guides/database/database-linter
+--   * Enable leaked-password protection in Auth settings before launch.

@@ -34,35 +34,40 @@ export async function createListing(
     return { status: "error", message: "Kontrollera fälten nedan.", errors };
   }
 
-  // When a Supabase project is connected, persist the listing. The insert is
-  // wrapped so the demo still works with no backend configured.
+  // Persist to Supabase only when a host is authenticated (RLS requires
+  // host_id = auth.uid()). Until BankID sign-in is wired, there's no session,
+  // so we acknowledge without persisting.
   const supabase = await createSupabaseServerClient();
   if (supabase) {
-    const { error } = await supabase.from("listings").insert({
-      category,
-      title,
-      city,
-      area,
-      price_per_month: price,
-      covered: formData.get("covered") === "on",
-      ev_charging: formData.get("evCharging") === "on",
-      access_247: formData.get("access247") === "on",
-      description: String(formData.get("description") ?? "").trim(),
-      status: "pending_review",
-    });
-    if (error) {
-      return { status: "error", message: `Kunde inte spara: ${error.message}` };
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { error } = await supabase.from("listings").insert({
+        host_id: user.id,
+        category,
+        title,
+        city,
+        area,
+        price_per_month: price,
+        covered: formData.get("covered") === "on",
+        ev_charging: formData.get("evCharging") === "on",
+        access_247: formData.get("access247") === "on",
+        description: String(formData.get("description") ?? "").trim(),
+        status: "pending_review",
+      });
+      if (error) {
+        return { status: "error", message: `Kunde inte spara: ${error.message}` };
+      }
+      return { status: "success", message: "Tack! Din plats har skickats in för granskning." };
     }
-    return {
-      status: "success",
-      message: "Tack! Din plats har skickats in för granskning.",
-    };
   }
 
-  // Demo mode (no backend): acknowledge without persisting.
+  // No session yet (sign-in is stubbed): acknowledge without persisting.
   return {
     status: "success",
     message:
-      "Tack! I demoläget sparas inte annonsen. Koppla ett Supabase-projekt (se .env.example) för att lagra riktiga annonser.",
+      "Tack! Din plats är validerad. När BankID-inloggning är aktiv sparas den i databasen och skickas för granskning.",
   };
 }

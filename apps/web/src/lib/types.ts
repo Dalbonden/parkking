@@ -22,6 +22,18 @@ export function categoryMeta(key: Category): CategoryMeta {
   return CATEGORIES.find((c) => c.key === key) ?? CATEGORIES[0];
 }
 
+/** Presentation-only placeholder colors keyed by category. */
+const CATEGORY_SWATCH: Record<Category, string> = {
+  parking: "#2f6f57",
+  garage: "#37506b",
+  storage: "#6b5637",
+  boat: "#31606b",
+};
+
+export function categorySwatch(key: Category): string {
+  return CATEGORY_SWATCH[key] ?? "#2f6f57";
+}
+
 export interface Listing {
   id: string;
   title: string;
