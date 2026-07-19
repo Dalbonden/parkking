@@ -37,8 +37,8 @@ export async function createListing(
   }
 
   // Persist to Supabase only when a host is authenticated (RLS requires
-  // host_id = auth.uid()). Until BankID sign-in is wired, there's no session,
-  // so we acknowledge without persisting.
+  // host_id = auth.uid()). Without a signed-in session we acknowledge the
+  // submission without persisting.
   const supabase = await createSupabaseServerClient();
   if (supabase) {
     const {
@@ -72,6 +72,6 @@ export async function createListing(
   return {
     status: "success",
     message:
-      "Tack! Din plats är validerad. När BankID-inloggning är aktiv sparas den i databasen och skickas för granskning.",
+      "Tack! Din plats är validerad. Logga in för att spara den i databasen och skicka den för granskning.",
   };
 }

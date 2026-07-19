@@ -130,7 +130,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <div>
               <div className="font-medium">{listing.hostName}</div>
               <div className="text-sm text-muted-foreground">
-                Verifierad med BankID · svarar oftast inom några timmar
+                Verifierad värd · svarar oftast inom några timmar
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               <ShieldIcon className="size-4 text-primary" /> Trygg bokning
             </div>
             <ul className="mt-2 space-y-1 text-muted-foreground">
-              <li>BankID-verifierade parter</li>
+              <li>ID-verifierade parter</li>
               <li>Betalning via escrow</li>
               <li>Skydd mot skador ingår</li>
             </ul>

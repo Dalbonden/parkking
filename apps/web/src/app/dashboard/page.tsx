@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth";
+import { getProfile } from "@/lib/profile";
 import { getListingsForHost } from "@/lib/listings";
 import { getBookingsForHost } from "@/lib/bookings";
 import { formatSek, formatShortDate } from "@/lib/format";
-import { CategoryIcon } from "@/components/icons";
+import { CategoryIcon, ShieldCheckIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Min sida",
@@ -31,7 +32,8 @@ export default async function DashboardPage() {
     );
   }
 
-  const [myListings, incoming] = await Promise.all([
+  const [profile, myListings, incoming] = await Promise.all([
+    getProfile(user.id),
     getListingsForHost(user.id),
     getBookingsForHost(user.id),
   ]);
@@ -58,6 +60,28 @@ export default async function DashboardPage() {
           <Link href="/list-space">+ Lägg upp ny plats</Link>
         </Button>
       </div>
+
+      {profile.idStatus !== "verified" && (
+        <Link
+          href="/profile"
+          className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-accent/40 p-4 transition-colors hover:bg-accent/60"
+        >
+          <ShieldCheckIcon className="size-6 shrink-0 text-primary" />
+          <div className="flex-1">
+            <div className="font-medium">
+              {profile.idStatus === "pending"
+                ? "Din identitet granskas"
+                : "Verifiera din identitet"}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {profile.idStatus === "pending"
+                ? "Vi återkommer när din legitimation har granskats."
+                : "Ladda upp legitimation och fyll i din profil för att bygga förtroende."}
+            </div>
+          </div>
+          <span className="text-sm font-medium text-primary">Till profilen →</span>
+        </Link>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (

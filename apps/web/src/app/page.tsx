@@ -14,7 +14,7 @@ import { getFeaturedListings } from "@/lib/listings";
 import { CATEGORIES } from "@/lib/types";
 
 const TRUST = [
-  { Icon: LockIcon, label: "BankID-verifiering" },
+  { Icon: LockIcon, label: "ID-verifiering" },
   { Icon: CreditCardIcon, label: "Trygg betalning & escrow" },
   { Icon: StarIcon, label: "Omdömen åt båda håll" },
   { Icon: ShieldIcon, label: "Skydd mot skador" },
@@ -25,7 +25,7 @@ const STEPS = [
   {
     n: 1,
     title: "Lägg upp din plats",
-    body: "Legitimera dig med BankID och intyga att du får hyra ut den. Sätt pris och tillgänglighet.",
+    body: "Verifiera din identitet och intyga att du får hyra ut den. Sätt pris och tillgänglighet.",
   },
   {
     n: 2,

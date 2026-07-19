@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "./auth-form";
-import { LockIcon } from "@/components/icons";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Logga in",
-  description: "Logga in på Platsdela med e-post eller BankID.",
+  description: "Logga in eller skapa ett konto på Platsdela.",
 };
 
 export default async function SignInPage() {
@@ -21,26 +20,12 @@ export default async function SignInPage() {
       </p>
 
       <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-sm">
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground opacity-60"
-        >
-          <LockIcon className="size-4" /> Fortsätt med BankID
-        </button>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          BankID kopplas in via Criipto/Signicat (docs/07). Använd e-post nedan i demoläget.
-        </p>
-
-        <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" /> eller <span className="h-px flex-1 bg-border" />
-        </div>
-
         <AuthForm />
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        Genom att fortsätta godkänner du våra villkor och integritetspolicy.
+        Efter registrering kan du fylla i din profil och verifiera din identitet. Genom att fortsätta
+        godkänner du våra villkor och integritetspolicy.
       </p>
     </div>
   );
