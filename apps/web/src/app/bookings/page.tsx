@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/icons";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookingsForRenter } from "@/lib/bookings";
+import { getReviewedBookingIds } from "@/lib/reviews";
+import { ReviewForm } from "@/components/review-form";
 import { formatSek, formatShortDate } from "@/lib/format";
 import { categorySwatch } from "@/lib/types";
 
@@ -29,7 +31,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
   if (!user) redirect("/sign-in?next=/bookings");
 
   const { success } = await searchParams;
-  const bookings = await getBookingsForRenter(user.id);
+  const [bookings, reviewedIds] = await Promise.all([
+    getBookingsForRenter(user.id),
+    getReviewedBookingIds(user.id),
+  ]);
+  const reviewed = new Set(reviewedIds);
+  const REVIEWABLE = new Set(["confirmed", "active", "completed"]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -52,38 +59,50 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
       ) : (
         <div className="mt-6 space-y-3">
           {bookings.map((b) => (
-            <div key={b.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
-              <span
-                className="grid size-12 shrink-0 place-items-center rounded-lg text-white/90"
-                style={{ backgroundColor: b.listing ? categorySwatch(b.listing.category) : "#2f6f57" }}
-              >
-                {b.listing && <CategoryIcon category={b.listing.category} className="size-6" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                {b.listing ? (
-                  <Link href={`/listings/${b.listing.id}`} className="font-medium hover:text-primary">
-                    {b.listing.title}
-                  </Link>
-                ) : (
-                  <span className="font-medium">Plats borttagen</span>
-                )}
-                <div className="text-sm text-muted-foreground">
-                  {b.listing ? `${b.listing.area}, ${b.listing.city} · ` : ""}
-                  {formatShortDate(b.startDate)}–{formatShortDate(b.endDate)}
-                </div>
-                <div className="mt-1 flex gap-1.5">
-                  <Badge variant="outline">{STATUS_LABEL[b.status] ?? b.status}</Badge>
-                  {b.paymentStatus === "paid" ? (
-                    <Badge variant="accent">Betald</Badge>
+            <div key={b.id} className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-4">
+                <span
+                  className="grid size-12 shrink-0 place-items-center rounded-lg text-white/90"
+                  style={{ backgroundColor: b.listing ? categorySwatch(b.listing.category) : "#2f6f57" }}
+                >
+                  {b.listing && <CategoryIcon category={b.listing.category} className="size-6" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  {b.listing ? (
+                    <Link href={`/listings/${b.listing.id}`} className="font-medium hover:text-primary">
+                      {b.listing.title}
+                    </Link>
                   ) : (
-                    <Badge variant="outline">Väntar på betalning</Badge>
+                    <span className="font-medium">Plats borttagen</span>
+                  )}
+                  <div className="text-sm text-muted-foreground">
+                    {b.listing ? `${b.listing.area}, ${b.listing.city} · ` : ""}
+                    {formatShortDate(b.startDate)}–{formatShortDate(b.endDate)}
+                  </div>
+                  <div className="mt-1 flex gap-1.5">
+                    <Badge variant="outline">{STATUS_LABEL[b.status] ?? b.status}</Badge>
+                    {b.paymentStatus === "paid" ? (
+                      <Badge variant="accent">Betald</Badge>
+                    ) : (
+                      <Badge variant="outline">Väntar på betalning</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold">{formatSek(b.amountTotal)}</div>
+                  <div className="text-xs text-muted-foreground">totalt</div>
+                </div>
+              </div>
+
+              {REVIEWABLE.has(b.status) && (
+                <div className="mt-3 border-t border-border pt-3">
+                  {reviewed.has(b.id) ? (
+                    <p className="text-sm text-muted-foreground">Tack! Du har lämnat ett omdöme.</p>
+                  ) : (
+                    <ReviewForm bookingId={b.id} />
                   )}
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="font-semibold">{formatSek(b.amountTotal)}</div>
-                <div className="text-xs text-muted-foreground">totalt</div>
-              </div>
+              )}
             </div>
           ))}
         </div>

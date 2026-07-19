@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPlaceholder } from "@/components/map-placeholder";
 import { BookingWidget } from "@/components/booking-widget";
+import { Stars } from "@/components/stars";
 import { CategoryIcon, ShieldCheckIcon, ShieldIcon, StarIcon } from "@/components/icons";
 import { getListing } from "@/lib/listings";
-import { formatSek } from "@/lib/format";
+import { getReviewsForListing } from "@/lib/reviews";
+import { formatSek, formatShortDate } from "@/lib/format";
 import { categoryMeta } from "@/lib/types";
 import { createBooking } from "./booking-actions";
 
@@ -26,6 +28,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   const listing = await getListing(id);
   if (!listing) notFound();
 
+  const reviews = await getReviewsForListing(id);
   const cat = categoryMeta(listing.category);
 
   const features = [
@@ -80,6 +83,34 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <div className="mt-8">
             <h2 className="text-lg font-semibold">Om platsen</h2>
             <p className="mt-2 leading-relaxed text-muted-foreground">{listing.description}</p>
+          </div>
+
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold">
+              Omdömen {reviews.length > 0 && <span className="text-muted-foreground">({reviews.length})</span>}
+            </h2>
+            {reviews.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Inga omdömen ännu. Omdömen skrivs av hyresgäster efter en bokning.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-4">
+                {reviews.map((r) => (
+                  <li key={r.id} className="rounded-xl border border-border bg-card p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{r.authorName}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatShortDate(r.createdAt)}
+                      </span>
+                    </div>
+                    <Stars rating={r.rating} className="mt-1" />
+                    {r.comment && (
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{r.comment}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="mt-8">
