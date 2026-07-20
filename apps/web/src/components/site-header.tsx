@@ -2,11 +2,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getProfile } from "@/lib/profile";
+import { isCurrentUserAdmin } from "@/lib/admin";
 import { signOut } from "@/app/sign-in/actions";
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
-  const profile = user ? await getProfile(user.id) : null;
+  const [profile, isAdmin] = user
+    ? await Promise.all([getProfile(user.id), isCurrentUserAdmin()])
+    : [null, false];
   const initial = (profile?.fullName ?? user?.email ?? "?").trim().charAt(0).toUpperCase();
 
   return (
@@ -33,6 +36,11 @@ export async function SiteHeader() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/dashboard">Min sida</Link>
           </Button>
+          {isAdmin && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin">Granskning</Link>
+            </Button>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
