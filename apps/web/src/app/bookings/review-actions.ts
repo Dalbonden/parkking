@@ -14,7 +14,7 @@ export async function createReview(
 ): Promise<ReviewState> {
   const bookingId = String(formData.get("bookingId") ?? "");
   const rating = Number(formData.get("rating") ?? 0);
-  const comment = String(formData.get("comment") ?? "").trim();
+  const comment = String(formData.get("comment") ?? "").trim().slice(0, 2000);
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return { status: "error", message: "Välj ett betyg mellan 1 och 5." };

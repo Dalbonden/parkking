@@ -17,10 +17,11 @@ export async function createListing(
   _prev: CreateListingState,
   formData: FormData,
 ): Promise<CreateListingState> {
+  // Caps mirror the CHECK constraints in migration 0008.
   const category = String(formData.get("category") ?? "");
-  const title = String(formData.get("title") ?? "").trim();
-  const city = String(formData.get("city") ?? "").trim();
-  const area = String(formData.get("area") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim().slice(0, 120);
+  const city = String(formData.get("city") ?? "").trim().slice(0, 80);
+  const area = String(formData.get("area") ?? "").trim().slice(0, 80);
   const price = Number(formData.get("pricePerMonth") ?? 0);
   const attest = formData.get("attestation") === "on";
 
@@ -29,7 +30,9 @@ export async function createListing(
   if (title.length < 4) errors.title = "Ange en beskrivande rubrik.";
   if (!city) errors.city = "Ange stad.";
   if (!area) errors.area = "Ange område.";
-  if (!Number.isFinite(price) || price <= 0) errors.pricePerMonth = "Ange ett giltigt pris.";
+  if (!Number.isInteger(price) || price <= 0 || price > 200000) {
+    errors.pricePerMonth = "Ange ett giltigt pris (1–200 000 kr/mån).";
+  }
   if (!attest) errors.attestation = "Du måste intyga att du har rätt att hyra ut platsen.";
 
   if (Object.keys(errors).length > 0) {
@@ -56,7 +59,7 @@ export async function createListing(
         covered: formData.get("covered") === "on",
         ev_charging: formData.get("evCharging") === "on",
         access_247: formData.get("access247") === "on",
-        description: String(formData.get("description") ?? "").trim(),
+        description: String(formData.get("description") ?? "").trim().slice(0, 4000),
         status: "pending_review",
       });
       if (error) {

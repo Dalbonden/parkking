@@ -10,6 +10,59 @@ export interface ProfileState {
 
 const MAX_BYTES = 6 * 1024 * 1024; // 6 MB
 
+/**
+ * Never trust `file.name` or `file.type` — both are attacker-controlled. A file
+ * called `x.html` sent as `text/html` would otherwise be stored verbatim in the
+ * public avatars bucket and served as a live page from a trusted domain, and a
+ * name like `a.png/../../victim/avatar.png` would escape the owner's folder.
+ * Sniff the magic bytes instead and derive both the type and the extension.
+ */
+const SIGNATURES = [
+  { mime: "image/jpeg", ext: "jpg", test: (b: Uint8Array) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  {
+    mime: "image/png",
+    ext: "png",
+    test: (b: Uint8Array) =>
+      b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
+      b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a,
+  },
+  {
+    mime: "image/webp",
+    ext: "webp",
+    test: (b: Uint8Array) =>
+      b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+  },
+  {
+    mime: "application/pdf",
+    ext: "pdf",
+    test: (b: Uint8Array) =>
+      b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46,
+  },
+] as const;
+
+async function sniff(file: File, allowed: readonly string[]) {
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const match = SIGNATURES.find((s) => allowed.includes(s.mime) && s.test(head));
+  return match ?? null;
+}
+
+/** Shared guard: size, real content type, and a safe storage path. */
+async function checkUpload(formData: FormData, allowed: readonly string[], label: string) {
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: `Välj ${label}.` } as const;
+  }
+  if (file.size > MAX_BYTES) {
+    return { error: "Filen är för stor (max 6 MB)." } as const;
+  }
+  const kind = await sniff(file, allowed);
+  if (!kind) {
+    return { error: "Filformatet stöds inte. Använd JPG, PNG, WEBP eller PDF." } as const;
+  }
+  return { file, kind } as const;
+}
+
 export async function updateProfile(
   _prev: ProfileState,
   formData: FormData,
@@ -21,11 +74,16 @@ export async function updateProfile(
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Logga in först." };
 
+  // Length caps mirror the CHECK constraints in migration 0008 so the user gets
+  // a clean form instead of a database error.
+  const field = (name: string, max: number) =>
+    String(formData.get(name) ?? "").trim().slice(0, max) || null;
+
   const patch = {
-    full_name: String(formData.get("fullName") ?? "").trim() || null,
-    legal_name: String(formData.get("legalName") ?? "").trim() || null,
-    phone: String(formData.get("phone") ?? "").trim() || null,
-    bio: String(formData.get("bio") ?? "").trim() || null,
+    full_name: field("fullName", 120),
+    legal_name: field("legalName", 120),
+    phone: field("phone", 32),
+    bio: field("bio", 1000),
   };
 
   const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
@@ -46,17 +104,14 @@ export async function uploadAvatar(
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Logga in först." };
 
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { status: "error", message: "Välj en bildfil." };
-  }
-  if (file.size > MAX_BYTES) return { status: "error", message: "Bilden är för stor (max 6 MB)." };
+  const checked = await checkUpload(formData, ["image/jpeg", "image/png", "image/webp"], "en bildfil");
+  if ("error" in checked) return { status: "error", message: checked.error };
+  const { file, kind } = checked;
 
-  const ext = (file.name.split(".").pop() || "png").toLowerCase();
-  const path = `${user.id}/avatar.${ext}`;
+  const path = `${user.id}/avatar.${kind.ext}`;
   const { error: upErr } = await supabase.storage
     .from("avatars")
-    .upload(path, file, { upsert: true, contentType: file.type || undefined });
+    .upload(path, file, { upsert: true, contentType: kind.mime });
   if (upErr) return { status: "error", message: `Kunde inte ladda upp: ${upErr.message}` };
 
   const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -79,17 +134,18 @@ export async function uploadIdDocument(
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Logga in först." };
 
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { status: "error", message: "Välj en bild eller PDF av din legitimation." };
-  }
-  if (file.size > MAX_BYTES) return { status: "error", message: "Filen är för stor (max 6 MB)." };
+  const checked = await checkUpload(
+    formData,
+    ["image/jpeg", "image/png", "image/webp", "application/pdf"],
+    "en bild eller PDF av din legitimation",
+  );
+  if ("error" in checked) return { status: "error", message: checked.error };
+  const { file, kind } = checked;
 
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${user.id}/id-document.${ext}`;
+  const path = `${user.id}/id-document.${kind.ext}`;
   const { error: upErr } = await supabase.storage
     .from("id-documents")
-    .upload(path, file, { upsert: true, contentType: file.type || undefined });
+    .upload(path, file, { upsert: true, contentType: kind.mime });
   if (upErr) return { status: "error", message: `Kunde inte ladda upp: ${upErr.message}` };
 
   const { error } = await supabase

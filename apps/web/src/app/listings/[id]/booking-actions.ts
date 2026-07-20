@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { quote } from "@/lib/payments";
 
@@ -25,10 +26,14 @@ export async function createBooking(
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=/listings/${listingId}`);
 
+  // `status = active` matters: a host can read their own pending listing, so
+  // without this they could book (or link someone to) an unapproved space.
+  // Migration 0008 enforces the same rule in the database.
   const { data: listing } = await supabase
     .from("listings")
     .select("id, title, price_per_month, host_id")
     .eq("id", listingId)
+    .eq("status", "active")
     .maybeSingle();
   if (!listing) return { status: "error", message: "Platsen hittades inte." };
   if (listing.host_id === user.id) {
@@ -106,18 +111,33 @@ export async function createBooking(
     return { status: "error", message: "Ingen betalningssession skapades." };
   }
 
-  // --- Demo path (no Stripe keys): create a confirmed, paid booking ---
-  const { error } = await supabase.from("bookings").insert({
-    listing_id: listing.id,
-    renter_id: user.id,
-    start_date: startDate,
-    end_date: endDate,
-    status: "confirmed",
-    payment_status: "paid",
-    amount_total: q.total,
-    service_fee: q.renterFee,
-  });
+  // --- Demo path (no Stripe keys) ---
+  // The database forces every renter-created booking to requested/pending
+  // (0008), because a user who can mark their own booking "paid" can book for
+  // free. Confirming without money is a privileged act, so it goes through the
+  // service role — and only when the operator has explicitly configured one.
+  const { data: created, error } = await supabase
+    .from("bookings")
+    .insert({
+      listing_id: listing.id,
+      renter_id: user.id,
+      start_date: startDate,
+      end_date: endDate,
+      amount_total: q.total,
+      service_fee: q.renterFee,
+    })
+    .select("id")
+    .single();
   if (error) return { status: "error", message: error.message };
 
-  redirect("/bookings?success=1");
+  const admin = createSupabaseAdminClient();
+  if (admin && created) {
+    await admin
+      .from("bookings")
+      .update({ status: "confirmed", payment_status: "paid" })
+      .eq("id", created.id);
+    redirect("/bookings?success=1");
+  }
+
+  redirect("/bookings?requested=1");
 }
