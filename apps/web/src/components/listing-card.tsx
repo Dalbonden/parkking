@@ -13,10 +13,23 @@ export function ListingCard({ listing }: { listing: Listing }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div
-        className="relative flex h-40 items-center justify-center"
+        className="relative flex h-40 items-center justify-center overflow-hidden"
         style={{ backgroundColor: listing.swatch }}
       >
-        <CategoryIcon category={listing.category} className="size-14 text-white/90" strokeWidth={1.4} />
+        {listing.coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={listing.coverUrl}
+            alt=""
+            className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <CategoryIcon
+            category={listing.category}
+            className="size-14 text-white/90"
+            strokeWidth={1.4}
+          />
+        )}
         <div className="absolute left-3 top-3 flex gap-1.5">
           <Badge variant="primary">{cat.label}</Badge>
           {listing.consentVerified && (

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { checkUpload, IMAGE_MIME } from "@/lib/uploads";
 import type { Category } from "@/lib/types";
 
 export interface CreateListingState {
@@ -49,22 +50,47 @@ export async function createListing(
     } = await supabase.auth.getUser();
 
     if (user) {
-      const { error } = await supabase.from("listings").insert({
-        host_id: user.id,
-        category,
-        title,
-        city,
-        area,
-        price_per_month: price,
-        covered: formData.get("covered") === "on",
-        ev_charging: formData.get("evCharging") === "on",
-        access_247: formData.get("access247") === "on",
-        description: String(formData.get("description") ?? "").trim().slice(0, 4000),
-        status: "pending_review",
-      });
-      if (error) {
-        return { status: "error", message: `Kunde inte spara: ${error.message}` };
+      const { data: created, error } = await supabase
+        .from("listings")
+        .insert({
+          host_id: user.id,
+          category,
+          title,
+          city,
+          area,
+          price_per_month: price,
+          covered: formData.get("covered") === "on",
+          ev_charging: formData.get("evCharging") === "on",
+          access_247: formData.get("access247") === "on",
+          description: String(formData.get("description") ?? "").trim().slice(0, 4000),
+          status: "pending_review",
+        })
+        .select("id")
+        .single();
+      if (error || !created) {
+        return { status: "error", message: `Kunde inte spara: ${error?.message ?? "okänt fel"}` };
       }
+
+      // Optional cover photo. A bad image shouldn't lose the whole listing, so
+      // failures here are non-fatal — the host can add one later.
+      const hasCover = formData.get("cover");
+      if (hasCover instanceof File && hasCover.size > 0) {
+        const checked = await checkUpload(formData, IMAGE_MIME, "en bild", "cover");
+        if (!("error" in checked)) {
+          const path = `${user.id}/${created.id}.${checked.kind.ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("listing-photos")
+            .upload(path, checked.file, { upsert: true, contentType: checked.kind.mime });
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from("listing-photos").getPublicUrl(path);
+            await supabase
+              .from("listings")
+              .update({ cover_url: `${pub.publicUrl}?v=${Date.now()}` })
+              .eq("id", created.id);
+          }
+        }
+      }
+
       // Saved — send the host to their dashboard to see the new listing.
       revalidatePath("/dashboard");
       redirect("/dashboard");

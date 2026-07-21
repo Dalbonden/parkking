@@ -39,7 +39,7 @@ export default async function DashboardPage() {
   ]);
   const monthly = myListings.reduce((sum, l) => sum + l.pricePerMonth, 0);
   const earned = incoming
-    .filter((b) => b.paymentStatus === "paid")
+    .filter((b) => b.paymentStatus === "paid" && b.status !== "cancelled")
     .reduce((sum, b) => sum + (b.amountTotal - b.serviceFee), 0);
 
   const stats = [

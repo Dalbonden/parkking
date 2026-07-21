@@ -2,65 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { checkUpload, IMAGE_MIME, ID_DOC_MIME } from "@/lib/uploads";
 
 export interface ProfileState {
   status: "idle" | "success" | "error";
   message?: string;
-}
-
-const MAX_BYTES = 6 * 1024 * 1024; // 6 MB
-
-/**
- * Never trust `file.name` or `file.type` — both are attacker-controlled. A file
- * called `x.html` sent as `text/html` would otherwise be stored verbatim in the
- * public avatars bucket and served as a live page from a trusted domain, and a
- * name like `a.png/../../victim/avatar.png` would escape the owner's folder.
- * Sniff the magic bytes instead and derive both the type and the extension.
- */
-const SIGNATURES = [
-  { mime: "image/jpeg", ext: "jpg", test: (b: Uint8Array) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
-  {
-    mime: "image/png",
-    ext: "png",
-    test: (b: Uint8Array) =>
-      b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
-      b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a,
-  },
-  {
-    mime: "image/webp",
-    ext: "webp",
-    test: (b: Uint8Array) =>
-      b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
-  },
-  {
-    mime: "application/pdf",
-    ext: "pdf",
-    test: (b: Uint8Array) =>
-      b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46,
-  },
-] as const;
-
-async function sniff(file: File, allowed: readonly string[]) {
-  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
-  const match = SIGNATURES.find((s) => allowed.includes(s.mime) && s.test(head));
-  return match ?? null;
-}
-
-/** Shared guard: size, real content type, and a safe storage path. */
-async function checkUpload(formData: FormData, allowed: readonly string[], label: string) {
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: `Välj ${label}.` } as const;
-  }
-  if (file.size > MAX_BYTES) {
-    return { error: "Filen är för stor (max 6 MB)." } as const;
-  }
-  const kind = await sniff(file, allowed);
-  if (!kind) {
-    return { error: "Filformatet stöds inte. Använd JPG, PNG, WEBP eller PDF." } as const;
-  }
-  return { file, kind } as const;
 }
 
 export async function updateProfile(
@@ -104,7 +50,7 @@ export async function uploadAvatar(
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Logga in först." };
 
-  const checked = await checkUpload(formData, ["image/jpeg", "image/png", "image/webp"], "en bildfil");
+  const checked = await checkUpload(formData, IMAGE_MIME, "en bildfil");
   if ("error" in checked) return { status: "error", message: checked.error };
   const { file, kind } = checked;
 
@@ -134,11 +80,7 @@ export async function uploadIdDocument(
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Logga in först." };
 
-  const checked = await checkUpload(
-    formData,
-    ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-    "en bild eller PDF av din legitimation",
-  );
+  const checked = await checkUpload(formData, ID_DOC_MIME, "en bild eller PDF av din legitimation");
   if ("error" in checked) return { status: "error", message: checked.error };
   const { file, kind } = checked;
 

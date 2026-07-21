@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getBookingsForRenter } from "@/lib/bookings";
 import { getReviewedBookingIds } from "@/lib/reviews";
 import { ReviewForm } from "@/components/review-form";
+import { CancelBookingButton } from "./cancel-button";
 import { formatSek, formatShortDate } from "@/lib/format";
 import { categorySwatch } from "@/lib/types";
 
@@ -24,19 +25,20 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "Avbruten",
 };
 
-type SearchParams = Promise<{ success?: string }>;
+type SearchParams = Promise<{ success?: string; requested?: string }>;
 
 export default async function BookingsPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/bookings");
 
-  const { success } = await searchParams;
+  const { success, requested } = await searchParams;
   const [bookings, reviewedIds] = await Promise.all([
     getBookingsForRenter(user.id),
     getReviewedBookingIds(user.id),
   ]);
   const reviewed = new Set(reviewedIds);
   const REVIEWABLE = new Set(["confirmed", "active", "completed"]);
+  const CANCELLABLE = new Set(["requested", "confirmed"]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -45,6 +47,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
       {success && (
         <div className="mt-4 rounded-xl border border-border bg-accent/40 p-4 text-sm">
           Tack! Din bokning är bekräftad. Betalningen hålls säkert tills bokningen startar.
+        </div>
+      )}
+
+      {requested && (
+        <div className="mt-4 rounded-xl border border-border bg-accent/40 p-4 text-sm">
+          Din förfrågan är skickad. Du kan avboka så länge den inte har startat.
         </div>
       )}
 
@@ -93,6 +101,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Sea
                   <div className="text-xs text-muted-foreground">totalt</div>
                 </div>
               </div>
+
+              {CANCELLABLE.has(b.status) && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <CancelBookingButton bookingId={b.id} />
+                </div>
+              )}
 
               {REVIEWABLE.has(b.status) && (
                 <div className="mt-3 border-t border-border pt-3">

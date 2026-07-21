@@ -4,12 +4,17 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PwaRegister } from "@/components/pwa-register";
+import { SITE_URL } from "@/lib/site";
+import { validateEnv } from "@/lib/env";
+
+// Fail fast (prod) / warn (dev) on a broken configuration.
+validateEnv();
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://platsdela.example"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Platsdela — hyr ut din förhyrda plats",
     template: "%s · Platsdela",

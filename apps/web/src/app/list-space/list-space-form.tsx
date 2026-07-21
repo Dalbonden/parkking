@@ -78,6 +78,14 @@ export function ListSpaceForm() {
         />
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="cover">Bild på platsen (valfritt)</Label>
+        <Input id="cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" />
+        <p className="text-xs text-muted-foreground">
+          En tydlig bild ger fler bokningar. JPG, PNG eller WEBP, max 6 MB.
+        </p>
+      </div>
+
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Egenskaper</legend>
         <label className="flex items-center gap-2 text-sm">

@@ -21,12 +21,13 @@ interface ListingRow {
   lng: number | null;
   rating: number;
   review_count: number;
+  cover_url: string | null;
   created_at: string;
   host: { full_name: string | null } | { full_name: string | null }[] | null;
 }
 
 const SELECT =
-  "id, category, title, description, city, area, price_per_month, size_label, covered, ev_charging, access_247, consent_verified, lat, lng, rating, review_count, created_at, host:profiles(full_name)";
+  "id, category, title, description, city, area, price_per_month, size_label, covered, ev_charging, access_247, consent_verified, lat, lng, rating, review_count, cover_url, created_at, host:profiles(full_name)";
 
 function rowToListing(row: ListingRow): Listing {
   const host = Array.isArray(row.host) ? row.host[0] : row.host;
@@ -49,6 +50,7 @@ function rowToListing(row: ListingRow): Listing {
     lng: row.lng ?? 0,
     description: row.description ?? "",
     swatch: categorySwatch(row.category),
+    coverUrl: row.cover_url ?? undefined,
     createdAt: row.created_at,
   };
 }

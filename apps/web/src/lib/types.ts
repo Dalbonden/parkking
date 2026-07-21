@@ -56,6 +56,8 @@ export interface Listing {
   description: string;
   /** hex color used for the placeholder image swatch */
   swatch: string;
+  /** public URL of the uploaded cover photo, if any */
+  coverUrl?: string;
   createdAt: string;
 }
 

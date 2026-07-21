@@ -48,10 +48,23 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         {/* Main */}
         <div>
           <div
-            className="flex h-64 items-center justify-center rounded-xl"
+            className="relative flex h-64 items-center justify-center overflow-hidden rounded-xl"
             style={{ backgroundColor: listing.swatch }}
           >
-            <CategoryIcon category={listing.category} className="size-24 text-white/90" strokeWidth={1.2} />
+            {listing.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={listing.coverUrl}
+                alt={listing.title}
+                className="absolute inset-0 size-full object-cover"
+              />
+            ) : (
+              <CategoryIcon
+                category={listing.category}
+                className="size-24 text-white/90"
+                strokeWidth={1.2}
+              />
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">
