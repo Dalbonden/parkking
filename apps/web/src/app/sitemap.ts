@@ -7,6 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/listings`, changeFrequency: "hourly", priority: 0.9 },
     { url: `${SITE_URL}/list-space`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/villkor`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${SITE_URL}/sign-in`, changeFrequency: "yearly", priority: 0.3 },
   ];
 

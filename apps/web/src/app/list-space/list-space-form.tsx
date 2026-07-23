@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ShieldCheckIcon } from "@/components/icons";
+import { LiabilityNotice } from "@/components/liability-notice";
 import { CATEGORIES } from "@/lib/types";
 import { createListing, type CreateListingState } from "./actions";
 
@@ -117,6 +118,8 @@ export function ListSpaceForm() {
         </label>
         <FieldError msg={state.errors?.attestation} />
       </div>
+
+      <LiabilityNotice context="host" />
 
       {state.status === "error" && state.message && (
         <p className="text-sm text-destructive">{state.message}</p>

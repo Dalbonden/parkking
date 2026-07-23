@@ -24,6 +24,9 @@ export function SiteFooter() {
             <Link href="/sign-in" className="hover:text-foreground">
               Logga in
             </Link>
+            <Link href="/villkor" className="hover:text-foreground">
+              Villkor &amp; ansvar
+            </Link>
           </nav>
         </div>
         <p className="mt-8 text-xs text-muted-foreground">

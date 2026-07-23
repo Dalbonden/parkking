@@ -7,6 +7,7 @@ import { MapPlaceholder } from "@/components/map-placeholder";
 import { BookingWidget } from "@/components/booking-widget";
 import { Stars } from "@/components/stars";
 import { CategoryIcon, ShieldCheckIcon, ShieldIcon, StarIcon } from "@/components/icons";
+import { LiabilityNotice } from "@/components/liability-notice";
 import { getListing } from "@/lib/listings";
 import { getReviewsForListing } from "@/lib/reviews";
 import { formatSek, formatShortDate } from "@/lib/format";
@@ -174,6 +175,10 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               <li>Betalning via escrow</li>
               <li>Skydd mot skador ingår</li>
             </ul>
+          </div>
+
+          <div className="mt-4">
+            <LiabilityNotice context="renter" />
           </div>
         </aside>
       </div>
